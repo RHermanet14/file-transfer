@@ -25,6 +25,7 @@ export default function PeerChatDebug() {
   const [sendProgress, setSendProgress] = useState<number | null>(null);
   const [receiveProgress, setReceiveProgress] = useState<number | null>(null);
   const [log, setLog] = useState<string[]>([]);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
 
   const connRef = useRef<DataConnection | null>(null);
   const peerRef = useRef<import("peerjs").default | null>(null);
@@ -164,7 +165,9 @@ export default function PeerChatDebug() {
   async function sendFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     const conn = connRef.current;
-    if (!file || !conn?.open) return addLog("Cannot send file: no open connection");
+    if (!file) return;
+    setSelectedFileName(file.name);
+    if (!conn?.open) return addLog("Cannot send file: no open connection");
 
     addLog(`Starting send: "${file.name}" (${file.size} bytes)`);
 
@@ -200,44 +203,89 @@ export default function PeerChatDebug() {
     e.target.value = "";
   }
 
+  const draftKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter')
+      send();
+  };
+
+  const [isChecked, setIsChecked] = useState<boolean>(false);
+
+  const handleCheck = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setIsChecked(event.target.checked);
+  }
+
   return (
-    <div style={{ fontFamily: "monospace", fontSize: 13 }}>
-      <p>Your ID: {myId || "(waiting for open event...)"}</p>
+    <div className="font-mono text-sm space-y-4">
+      <div className="flex">
+        <p>Your ID:</p>
+        <button className="text-gray-700 font-semibold px-2 rounded bg-gray-400 hover:bg-gray-300" onClick={() => navigator.clipboard.writeText(myId)}>{myId || "(waiting for open event...)"}</button>
+      </div>
+      
 
-      <input value={remoteId} onChange={(e) => setRemoteId(e.target.value)} placeholder="peer id" />
-      <button onClick={connect}>Connect</button>
+      <div className="flex gap-2">
+        <input value={remoteId} onChange={(e) => setRemoteId(e.target.value)} placeholder="Peer ID" className="flex-1 border border-gray-300 rounded px-2 py-1"/>
+        <button onClick={connect} className="bg-gray-600 text-white rounded px-3 py-1 hover:bg-gray-500">Connect</button>
+      </div>
+      
 
-      <div>
+      <div className="space-y-1">
         {messages.map((m, i) => (
-          <div key={i}>{m}</div>
+          <div className="text-gray-800" key={i}>{m}</div>
         ))}
       </div>
-
-      <input value={draft} onChange={(e) => setDraft(e.target.value)} />
-      <button onClick={send}>Send</button>
-
-      <div>
-        <input type="file" onChange={sendFile} />
-        {sendProgress !== null && <span> sending... {sendProgress}%</span>}
+      <div className="flex gap-2">
+        <input placeholder="Your message here" value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={draftKeyDown} className="flex-1 border border-gray-300 rounded px-2 py-1"/>
+        <button onClick={send} className="bg-gray-600 text-white rounded px-3 py-1 hover:bg-gray-500">Send</button>
       </div>
+      
 
-      {receiveProgress !== null && <p>receiving... {receiveProgress}%</p>}
+      <div className="flex items-center gap-6">
+        <label className="cursor-pointer bg-blue-600 text-white rounded px-4 py-2 hover:bg-blue-700 transition-colors">
+          Choose file
+          <input type="file" onChange={sendFile} className="hidden" />
+        </label>
+
+        <span className="text-gray-500 italic">
+          {selectedFileName ?? "No file selected"}
+        </span>
+
+        {sendProgress !== null && (
+          <span className="text-blue-600 font-semibold">{sendProgress}%</span>
+        )}
+      </div>
+ 
+      {receiveProgress !== null && (
+        <p className="text-blue-600">receiving... {receiveProgress}%</p>
+      )}
 
       {receivedFile && (
         <p>
-          <a href={receivedFile.url} download={receivedFile.name}>
+          <a
+            href={receivedFile.url}
+            download={receivedFile.name}
+            className="text-green-700 underline hover:text-green-900"
+          >
             Download {receivedFile.name}
           </a>
         </p>
       )}
+ 
+      <hr className="border-gray-300" />
 
-      <hr />
-      <h4>Debug log</h4>
-      <div style={{ background: "#111", color: "#0f0", padding: 10, height: 220, overflowY: "auto" }}>
-        {log.map((entry, i) => (
-          <div key={i}>{entry}</div>
-        ))}
+      <div className="flex gap-4 p-2">
+        <h4>Debug log</h4>
+        <input type="checkbox" checked={isChecked} onChange={handleCheck}/>
       </div>
+      {
+        isChecked ?
+        <div className="bg-neutral-900 text-green-400 p-2.5 h-220 overflow-y-auto">
+          {log.map((entry, i) => (
+            <div key={i}>{entry}</div>
+          ))}
+        </div>
+        : null
+      }
+      
     </div>
   );
 }
