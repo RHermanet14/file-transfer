@@ -227,17 +227,10 @@ export default function PeerChatDebug() {
         <button onClick={connect} className="bg-gray-600 text-white rounded px-3 py-1 hover:bg-gray-500">Connect</button>
       </div>
       
-
-      <div className="space-y-1">
-        {messages.map((m, i) => (
-          <div className="text-gray-800" key={i}>{m}</div>
-        ))}
-      </div>
       <div className="flex gap-2">
         <input placeholder="Your message here" value={draft} onChange={(e) => setDraft(e.target.value)} onKeyDown={draftKeyDown} className="flex-1 border border-gray-300 rounded px-2 py-1"/>
         <button onClick={send} className="bg-gray-600 text-white rounded px-3 py-1 hover:bg-gray-500">Send</button>
       </div>
-      
 
       <div className="flex items-center gap-6">
         <label className="cursor-pointer bg-blue-600 text-white rounded px-4 py-2 hover:bg-blue-700 transition-colors">
@@ -269,6 +262,14 @@ export default function PeerChatDebug() {
           </a>
         </p>
       )}
+
+      <hr className="border-gray-300" />
+
+      <div className="space-y-1">
+        {messages.toReversed().map((m, i) => (
+          <div className="text-gray-800" key={i}>{m}</div>
+        ))}
+      </div>
  
       <hr className="border-gray-300" />
 
