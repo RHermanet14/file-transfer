@@ -265,7 +265,7 @@ export default function PeerChatDebug() {
 
       <hr className="border-gray-300" />
 
-      <div className="space-y-1">
+      <div className="space-y-1 overflow-y-auto">
         {messages.toReversed().map((m, i) => (
           <div className="text-gray-800" key={i}>{m}</div>
         ))}
